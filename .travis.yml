@@ -1,0 +1,19 @@
+language: csharp
+mono:
+  - latest
+
+solution: PCLExt.Lua.sln
+
+before_install:
+  - git submodule update --init --recursive
+  
+install:
+  - nuget restore PCLExt.Lua.sln
+  
+script:
+  - xbuild /p:Configuration=Release PCLExt.Lua.sln
+  - xbuild /p:Configuration=Debug PCLExt.Lua.sln
+
+notifications:
+  email:
+    on_success: always

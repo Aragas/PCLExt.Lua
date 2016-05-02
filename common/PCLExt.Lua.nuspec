@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+    <metadata>
+        <id>PCLExt.Lua</id>
+        <version>1.0.2</version>
+        <title>PCL Extension - Lua API</title>
+        <authors>Aragas</authors>
+        <owners>Aragas</owners>
+        <licenseUrl>https://github.com/Aragas/PCLExt.Lua/blob/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/Aragas/PCLExt.Lua</projectUrl>
+        <iconUrl>https://raw.githubusercontent.com/Aragas/PCLExt.Lua/master/common/sushi_64.png</iconUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>PCL Extension provides a Lua implementation for .NET, Xamarin.iOS, Xamarin.Android. This makes it easier to create cross-platform .NET libraries and apps.</description>
+        <summary>PCL Extension provides a Lua implementation for PCL platforms</summary>
+        <tags>lua moonsharp portable pcl android mac ios xamarin monoandroid monotouch</tags>
+        <dependencies>
+            <group targetFramework=".NETFramework4.5">
+                <dependency id="MoonSharp" version="1.5.0.1" />
+                <dependency id="PCLExt.FileStorage" version="1.0.3" />
+            </group>
+            <group targetFramework="MonoAndroid0.0">
+                <dependency id="MoonSharp" version="1.5.0.1" />
+                <dependency id="PCLExt.FileStorage" version="1.0.3" />
+            </group>
+            <group targetFramework="xamarinios0.0">
+                <dependency id="MoonSharp" version="1.5.0.1" />
+                <dependency id="PCLExt.FileStorage" version="1.0.3" />
+            </group>
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="..\src\PCLExt.Lua.Abstractions\bin\Release\PCLExt.Lua.Abstractions.dll" target="lib\monoandroid\PCLExt.Lua.Abstractions.dll" />
+        <file src="..\src\PCLExt.Lua.Abstractions\bin\Release\PCLExt.Lua.Abstractions.xml" target="lib\monoandroid\PCLExt.Lua.Abstractions.xml" />
+        <file src="..\src\PCLExt.Lua.Android\bin\Release\PCLExt.Lua.dll" target="lib\monoandroid\PCLExt.Lua.dll" />
+        <file src="..\src\PCLExt.Lua.Android\bin\Release\PCLExt.Lua.xml" target="lib\monoandroid\PCLExt.Lua.xml" />
+        <file src="..\src\PCLExt.Lua.Abstractions\bin\Release\PCLExt.Lua.Abstractions.dll" target="lib\net45\PCLExt.Lua.Abstractions.dll" />
+        <file src="..\src\PCLExt.Lua.Abstractions\bin\Release\PCLExt.Lua.Abstractions.xml" target="lib\net45\PCLExt.Lua.Abstractions.xml" />
+        <file src="..\src\PCLExt.Lua.Desktop\bin\Release\PCLExt.Lua.dll" target="lib\net45\PCLExt.Lua.dll" />
+        <file src="..\src\PCLExt.Lua.Desktop\bin\Release\PCLExt.Lua.xml" target="lib\net45\PCLExt.Lua.xml" />
+        <file src="..\src\PCLExt.Lua.Abstractions\bin\Release\PCLExt.Lua.Abstractions.dll" target="lib\portable-net45+wp8+wpa81+win8+monoandroid+monotouch+Xamarin.iOS+Xamarin.Mac\PCLExt.Lua.Abstractions.dll" />
+        <file src="..\src\PCLExt.Lua.Abstractions\bin\Release\PCLExt.Lua.Abstractions.xml" target="lib\portable-net45+wp8+wpa81+win8+monoandroid+monotouch+Xamarin.iOS+Xamarin.Mac\PCLExt.Lua.Abstractions.xml" />
+        <file src="..\src\PCLExt.Lua\bin\Release\PCLExt.Lua.dll" target="lib\portable-net45+wp8+wpa81+win8+monoandroid+monotouch+Xamarin.iOS+Xamarin.Mac\PCLExt.Lua.dll" />
+        <file src="..\src\PCLExt.Lua\bin\Release\PCLExt.Lua.xml" target="lib\portable-net45+wp8+wpa81+win8+monoandroid+monotouch+Xamarin.iOS+Xamarin.Mac\PCLExt.Lua.xml" />
+        <file src="..\src\PCLExt.Lua.Abstractions\bin\Release\PCLExt.Lua.Abstractions.dll" target="lib\portable-Xamarin.iOS+Xamarin.Mac\PCLExt.Lua.Abstractions.dll" />
+        <file src="..\src\PCLExt.Lua.Abstractions\bin\Release\PCLExt.Lua.Abstractions.xml" target="lib\portable-Xamarin.iOS+Xamarin.Mac\PCLExt.Lua.Abstractions.xml" />
+        <file src="..\src\PCLExt.Lua.iOS\bin\Release\PCLExt.Lua.dll" target="lib\portable-Xamarin.iOS+Xamarin.Mac\PCLExt.Lua.dll" />
+        <file src="..\src\PCLExt.Lua.iOS\bin\Release\PCLExt.Lua.xml" target="lib\portable-Xamarin.iOS+Xamarin.Mac\PCLExt.Lua.xml" />
+    </files>
+</package>
