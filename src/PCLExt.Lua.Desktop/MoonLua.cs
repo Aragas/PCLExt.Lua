@@ -94,7 +94,11 @@ namespace PCLExt.Lua
 
         public override object this[string fullPath] { get { return LuaScript.Globals[fullPath]; } set { LuaScript.Globals[fullPath] = value; } }
 
-        public override object[] CallFunction(string functionName, params object[] args) => LuaScript.Call(LuaScript.Globals[functionName], args).Tuple;
+        public override object[] CallFunction(string functionName, params object[] args)
+        {
+            var ret = LuaScript.Call(LuaScript.Globals[functionName], args).Tuple;
+            return ret?.Any() == true ? ret.Select(dynVal => dynVal.ToObject()).ToArray() : new object[0];
+        }
 
         public override bool ReloadFile()
         {
@@ -207,7 +211,11 @@ namespace PCLExt.Lua
             set { ScriptTable[field] = value; }
         }
 
-        public override object[] CallFunction(string functionName, params object[] args) => ScriptTable.OwnerScript.Call(ScriptTable[functionName], args).Tuple;
+        public override object[] CallFunction(string functionName, params object[] args)
+        {
+            var ret = ScriptTable.OwnerScript.Call(ScriptTable[functionName], args).Tuple;
+            return ret?.Any() == true ? ret.Select(dynVal => dynVal.ToObject()).ToArray() : new object[0];
+        }
 
 
         public override Dictionary<object, object> ToDictionary() => ScriptTable.Pairs.ToDictionary<TablePair, object, object>(pair => pair.Key, pair => RecursiveParse(pair.Value));
