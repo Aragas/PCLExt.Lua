@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 
 using MoonSharp.Interpreter;
+using MoonSharp.Interpreter.Interop.RegistrationPolicies;
 using MoonSharp.Interpreter.Loaders;
 
 using PCLExt.FileStorage;
@@ -14,58 +15,44 @@ namespace PCLExt.Lua
 {
     internal class FileSystemScriptLoader : IScriptLoader
     {
-        private static IFolder Modules => FileSystem.Current.BaseStorage.CreateFolderAsync("Lua", CreationCollisionOption.OpenIfExists).Result.CreateFolderAsync("modules", CreationCollisionOption.OpenIfExists).Result;
+        private static IFolder Modules => Storage.LuaFolder.CreateFolderAsync("modules", CreationCollisionOption.OpenIfExists).Result;
 
         public object LoadFile(string file, Table globalContext)
         {
-            if (file.StartsWith("m_"))
+            if (file.StartsWith("module_"))
             {
-                if (FileSystem.Current.BaseStorage.CreateFolderAsync("Lua", CreationCollisionOption.OpenIfExists).Result.CheckExistsAsync(file).Result == ExistenceCheckResult.FileExists)
-                    using (var stream = FileSystem.Current.BaseStorage.CreateFolderAsync("Lua", CreationCollisionOption.OpenIfExists).Result.GetFileAsync(file).Result.OpenAsync(PCLExt.FileStorage.FileAccess.Read).Result)
-                    using (var reader = new StreamReader(stream))
-                        return reader.ReadToEnd();
+                using (var stream = Storage.LuaFolder.GetFileAsync(file).Result.OpenAsync(FileStorage.FileAccess.Read).Result)
+                using (var reader = new StreamReader(stream))
+                    return reader.ReadToEnd();
             }
             else
             {
-                if (Modules.CheckExistsAsync(file).Result == ExistenceCheckResult.FileExists)
-                    using (var stream = Modules.GetFileAsync(file).Result.OpenAsync(PCLExt.FileStorage.FileAccess.Read).Result)
-                    using (var reader = new StreamReader(stream))
-                        return reader.ReadToEnd();
+                using (var stream = Modules.GetFileAsync(file).Result.OpenAsync(FileStorage.FileAccess.Read).Result)
+                using (var reader = new StreamReader(stream))
+                    return reader.ReadToEnd();
             }
-
-            return null;
         }
 
         public string ResolveFileName(string filename, Table globalContext) => $"{filename}.lua";
 
-        public string ResolveModuleName(string modname, Table globalContext) => $"m_{modname}";
+        public string ResolveModuleName(string modname, Table globalContext) => $"module_{modname}";
     }
-
 
     public class MoonLua : LuaScript
     {
+        public static implicit operator Script(MoonLua moonLua) => moonLua.LuaScript;
         static MoonLua()
         {
-            UserData.RegisterType<CultureInfo>();
+            UserData.RegistrationPolicy = new AutomaticRegistrationPolicy();
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion<LuaTable>(
+                (script, obj) => DynValue.NewTable((MoonLuaTable) obj));
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion<MoonLuaTable>(
+                (script, obj) => DynValue.NewTable(obj));
         }
+        
 
         private string LuaName { get; }
-
         private Script LuaScript { get; }
-
-        
-        public override object this[string fullPath]
-        {
-            get { return LuaScript.Globals[fullPath]; }
-            set
-            {
-                var type = value.GetType();
-                if (!UserData.IsTypeRegistered(type))
-                    UserData.RegisterType(type);
-
-                LuaScript.Globals[fullPath] = value;
-            }
-        }
 
         public MoonLua(string luaName = "", bool instantInit = false)
         {
@@ -85,6 +72,42 @@ namespace PCLExt.Lua
             if (instantInit)
                 ReloadFile();
         }
+        public MoonLua(string luaName, string[] modules, bool instantInit = false)
+        {
+            LuaName = luaName;
+
+            LuaScript = new Script();
+            LuaScript.Options.ScriptLoader = new FileSystemScriptLoader();
+
+
+            // Register custom modules that we allow to use.
+            foreach (var module in modules)
+                RegisterModule(module);
+
+            RegisterCustom(LuaScript.Globals);
+
+
+            if (instantInit)
+                ReloadFile();
+        }
+
+
+        public override object this[string fullPath] { get { return LuaScript.Globals[fullPath]; } set { LuaScript.Globals[fullPath] = value; } }
+
+        public override object[] CallFunction(string functionName, params object[] args) => LuaScript.Call(LuaScript.Globals[functionName], args).Tuple;
+
+        public override bool ReloadFile()
+        {
+            using (var stream = Storage.LuaFolder.GetFileAsync(LuaName).Result.OpenAsync(FileStorage.FileAccess.Read).Result)
+            using (var reader = new StreamReader(stream))
+            {
+                var code = reader.ReadToEnd();
+                LuaScript.DoString(code);
+                return true;
+            }
+        }
+
+
         private Table CompileFile(string path)
         {
             var modules = CoreModules.Preset_SoftSandbox;
@@ -97,16 +120,14 @@ namespace PCLExt.Lua
             var file = Path.GetFileName(path);
             var text = folder.GetFileAsync(file).Result.ReadAllTextAsync().Result;
 
-            var table = new Table(LuaScript);
-            table.RegisterCoreModules(modules);
-            RegisterCustom(table);
+            var table = RegisterCustom(new Table(LuaScript).RegisterCoreModules(modules));
             LuaScript.DoString(text, table);
 
             return table;
         }
-        private static string[] GetFiles(string path)
+        private Table GetFiles(string path)
         {
-            var folder = FileSystem.Current.BaseStorage.CreateFolderAsync("Lua", CreationCollisionOption.OpenIfExists).Result;
+            var folder = Storage.LuaFolder;
 
             var dirs = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Reverse().Skip(1).Reverse();
             foreach (var dir in dirs)
@@ -114,77 +135,92 @@ namespace PCLExt.Lua
 
             var files = folder.GetFilesAsync().Result;
 
-            return files.Select(file => file.Name).ToArray();
+            return (MoonLuaTable) Lua.CreateTable(this, "files", files.Select(file => file.Name).ToList());
         }
+
         private void RegisterModule(string moduleName, string tableName = "", CoreModules modules = CoreModules.Preset_SoftSandbox)
         {
             if (string.IsNullOrEmpty(tableName))
                 tableName = moduleName;
 
-            var table = new Table(LuaScript);
-            table.RegisterCoreModules(modules);
-            RegisterCustom(table);
+            var table = RegisterCustom(new Table(LuaScript).RegisterCoreModules(modules));
             LuaScript.DoFile(moduleName, table);
-
             LuaScript.Globals[tableName] = table;
         }
-        private void RegisterCustom(Table table)
+        private Table RegisterCustom(Table table)
         {
             foreach (var context in CustomContext)
                 table[context.Key] = context.Value;
 
             table["CompileFile"] = (Func<string, Table>) CompileFile;
-            table["GetFiles"] = (Func<string, string[]>) GetFiles;
+            table["GetFiles"] = (Func<string, Table>) GetFiles;
+
+            return table;
         }
-
-
-        public override bool ReloadFile()
-        {
-            if (FileSystem.Current.BaseStorage.CreateFolderAsync("Lua", CreationCollisionOption.OpenIfExists).Result.CheckExistsAsync(LuaName).Result == ExistenceCheckResult.FileExists)
-                using (var stream = FileSystem.Current.BaseStorage.CreateFolderAsync("Lua", CreationCollisionOption.OpenIfExists).Result.GetFileAsync(LuaName).Result.OpenAsync(PCLExt.FileStorage.FileAccess.Read).Result)
-                using (var reader = new StreamReader(stream))
-                {
-                    var code = reader.ReadToEnd();
-                    LuaScript.DoString(code);
-                    return true;
-                }
-
-            return false;
-        }
-
-        public override object[] CallFunction(string functionName, params object[] args) => LuaScript.Call(LuaScript.Globals[functionName], args).Tuple;
     }
 
     public class MoonLuaTable : LuaTable
     {
-        private Table TableScript { get; }
+        public static implicit operator Table(MoonLuaTable moonLua) => moonLua.ScriptTable;
 
-        public MoonLuaTable(Table tableScript) { TableScript = tableScript; }
-        public MoonLuaTable(LuaScript luaScript, string tableName) { TableScript = luaScript[tableName] as Table; }
+
+        private Table ScriptTable { get; }
+
+        /// <summary>
+        /// Using existing Table.
+        /// </summary>
+        internal MoonLuaTable(Table tableScript) { ScriptTable = tableScript; }
+        /// <summary>
+        /// Using existing Table.
+        /// </summary>
+        internal MoonLuaTable(LuaScript luaScript, string tableName) { ScriptTable = luaScript[tableName] as Table; }
+
+        /// <summary>
+        /// Creating new Table.
+        /// </summary>
+        internal MoonLuaTable(LuaScript luaScript, string tableName, IList list)
+        {
+            ScriptTable = new Table((MoonLua) luaScript);
+            for (var i = 0; i < list.Count; i++)
+                ScriptTable[i + 1] = list[i];
+
+            luaScript[tableName] = ScriptTable;
+        }
+
 
         public override object this[object field]
         {
-            get { return TableScript[field] is Table ? new MoonLuaTable((Table) TableScript[field]) : TableScript[field]; }
-            set { TableScript[field] = value; }
+            get
+            {
+                var table = ScriptTable[field] as Table;
+                return table != null ? new MoonLuaTable(table) : ScriptTable[field];
+            }
+            set { ScriptTable[field] = value; }
         }
         public override object this[string field]
         {
-            get { return TableScript[field] is Table ? new MoonLuaTable((Table) TableScript[field]) : TableScript[field]; }
-            set { TableScript[field] = value; }
+            get
+            {
+                var table = ScriptTable[field] as Table;
+                return table != null ? new MoonLuaTable(table) : ScriptTable[field];
+            }
+            set { ScriptTable[field] = value; }
         }
 
-        public override object[] CallFunction(string functionName, params object[] args) => TableScript.OwnerScript.Call(TableScript[functionName], args).Tuple;
+        public override object[] CallFunction(string functionName, params object[] args) => ScriptTable.OwnerScript.Call(ScriptTable[functionName], args).Tuple;
 
-        public override Dictionary<object, object> ToDictionary() => TableScript.Pairs.ToDictionary<TablePair, object, object>(pair => pair.Key, pair => RecursiveParse(pair.Value));
+
+        public override Dictionary<object, object> ToDictionary() => ScriptTable.Pairs.ToDictionary<TablePair, object, object>(pair => pair.Key, pair => RecursiveParse(pair.Value));
         private static object RecursiveParse(object value)
         {
-            if (value is Table)
-                return RecursiveParse(new MoonLuaTable((Table) value).ToDictionary());
+            var table = value as Table;
+            if (table != null)
+                return RecursiveParse(new MoonLuaTable(table).ToDictionary());
 
             return value;
         }
 
-        public override List<object> ToList() => TableScript.Values.Cast<object>().ToList();
-        public override object[] ToArray() => TableScript.Values.Cast<object>().ToArray();
+        public override List<object> ToList() => ScriptTable.Values.Cast<object>().ToList();
+        public override object[] ToArray() => ScriptTable.Values.Cast<object>().ToArray();
     }
 }

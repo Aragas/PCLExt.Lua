@@ -47,7 +47,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PCLExt.Lua.Abstractions\PCLExt.Lua.Abstractions.csproj">
       <Project>{3f8d0494-6ee2-47fe-b263-f09a5ea3d0b3}</Project>
-      <Name>PCLExt.Thread.Abstractions</Name>
+      <Name>PCLExt.Lua.Abstractions</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

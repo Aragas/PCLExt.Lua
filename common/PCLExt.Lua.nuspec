@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
     <metadata>
         <id>PCLExt.Lua</id>
-        <version>1.0.2</version>
+        <version>1.0.9</version>
         <title>PCL Extension - Lua API</title>
         <authors>Aragas</authors>
         <owners>Aragas</owners>
@@ -15,16 +15,16 @@
         <tags>lua moonsharp portable pcl android mac ios xamarin monoandroid monotouch</tags>
         <dependencies>
             <group targetFramework=".NETFramework4.5">
-                <dependency id="MoonSharp" version="1.5.0.1" />
-                <dependency id="PCLExt.FileStorage" version="1.0.3" />
+                <dependency id="MoonSharp" version="2.0.0" />
+                <dependency id="PCLExt.FileStorage" version="1.0.5" />
             </group>
             <group targetFramework="MonoAndroid0.0">
-                <dependency id="MoonSharp" version="1.5.0.1" />
-                <dependency id="PCLExt.FileStorage" version="1.0.3" />
+                <dependency id="MoonSharp" version="2.0.0" />
+                <dependency id="PCLExt.FileStorage" version="1.0.5" />
             </group>
-            <group targetFramework="xamarinios0.0">
-                <dependency id="MoonSharp" version="1.5.0.1" />
-                <dependency id="PCLExt.FileStorage" version="1.0.3" />
+            <group targetFramework="Xamarin iOs0.0">
+                <dependency id="MoonSharp" version="2.0.0" />
+                <dependency id="PCLExt.FileStorage" version="1.0.5" />
             </group>
         </dependencies>
     </metadata>

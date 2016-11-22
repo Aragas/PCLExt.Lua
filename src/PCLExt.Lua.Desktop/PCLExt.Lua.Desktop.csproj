@@ -32,16 +32,16 @@
     <DocumentationFile>bin\Release\PCLExt.Lua.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MoonSharp.Interpreter, Version=1.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\MoonSharp.1.5.0.1\lib\net40-client\MoonSharp.Interpreter.dll</HintPath>
+    <Reference Include="MoonSharp.Interpreter, Version=2.0.0.0, Culture=neutral, PublicKeyToken=921e73ce94aa17f8, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\MoonSharp.2.0.0.0\lib\net40-client\MoonSharp.Interpreter.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="PCLExt.FileStorage, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\PCLExt.FileStorage.1.0.3\lib\net45\PCLExt.FileStorage.dll</HintPath>
+      <HintPath>..\..\packages\PCLExt.FileStorage.1.0.5\lib\net45\PCLExt.FileStorage.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="PCLExt.FileStorage.Abstractions, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\PCLExt.FileStorage.1.0.3\lib\net45\PCLExt.FileStorage.Abstractions.dll</HintPath>
+      <HintPath>..\..\packages\PCLExt.FileStorage.1.0.5\lib\net45\PCLExt.FileStorage.Abstractions.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -66,7 +66,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PCLExt.Lua.Abstractions\PCLExt.Lua.Abstractions.csproj">
       <Project>{3f8d0494-6ee2-47fe-b263-f09a5ea3d0b3}</Project>
-      <Name>PCLExt.Thread.Abstractions</Name>
+      <Name>PCLExt.Lua.Abstractions</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
